@@ -1,0 +1,61 @@
+type Agent {
+  id: ID!
+  name: String!
+  email: String!
+  authors: [Author!]!
+}
+
+type Author {
+  id: ID!
+  name: String!
+  website: String
+  agent: Agent!
+  books: [Book!]!
+}
+
+type Book {
+  id: ID!
+  title: String!
+  description: String!
+  cover: String!
+  authors: [Author!]!
+}
+
+type Query {
+  agent(id: ID!): Agent
+  agents: [Agent!]!
+  author(id: ID!): Author
+  authors: [Author!]!
+  book(id: ID!): Book
+  books: [Book!]!
+}
+
+type Mutation {
+  createAgent(data: AgentInput!): Agent!
+  updateAgent(id: ID!, data: AgentInput!): Agent!
+  deleteAgent(id: ID!): Agent!
+  createAuthor(data: AuthorInput!): Author!
+  updateAuthor(id: ID!, data: AuthorInput!): Author!
+  deleteAuthor(id: ID!): Author!
+  createBook(data: BookInput!): Book!
+  updateBook(id: ID!, data: BookInput!): Book!
+  deleteBook(id: ID!): Book!
+}
+
+input AgentInput {
+  name: String!
+  email: String!
+}
+
+input AuthorInput {
+  name: String!
+  website: String
+  agent_id: ID!
+}
+
+input BookInput {
+  title: String!
+  description: String!
+  cover: String!
+  authorIDs: [ID!]!
+}
