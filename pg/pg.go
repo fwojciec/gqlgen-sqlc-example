@@ -24,6 +24,7 @@ type Repository interface {
 	ListAuthors(ctx context.Context) ([]Author, error)
 	UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) (Author, error)
 	ListAuthorsByAgentID(ctx context.Context, agentID int64) ([]Author, error)
+	ListAuthorsByBookID(ctx context.Context, bookID int64) ([]Author, error)
 
 	// book queries
 	CreateBook(ctx context.Context, bookArg CreateBookParams, authorIDs []int64) (*Book, error)
@@ -31,6 +32,7 @@ type Repository interface {
 	DeleteBook(ctx context.Context, id int64) (Book, error)
 	GetBook(ctx context.Context, id int64) (Book, error)
 	ListBooks(ctx context.Context) ([]Book, error)
+	ListBooksByAuthorID(ctx context.Context, authorID int64) ([]Book, error)
 }
 
 type repoSvc struct {
@@ -112,4 +114,12 @@ func NewRepository(db *sql.DB) Repository {
 // Format: host=foo port=5432 user=bar password=baz dbname=qux sslmode=disable"
 func Open(dataSourceName string) (*sql.DB, error) {
 	return sql.Open("postgres", dataSourceName)
+}
+
+// StringPtrToNullString converts *string to sql.NullString.
+func StringPtrToNullString(s *string) sql.NullString {
+	if s != nil {
+		return sql.NullString{String: *s, Valid: true}
+	}
+	return sql.NullString{}
 }

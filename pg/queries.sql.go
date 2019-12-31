@@ -263,6 +263,39 @@ func (q *Queries) ListAuthorsByAgentID(ctx context.Context, agentID int64) ([]Au
 	return items, nil
 }
 
+const listAuthorsByBookID = `-- name: ListAuthorsByBookID :many
+SELECT authors.id, authors.name, authors.website, authors.agent_id FROM authors, book_authors
+WHERE authors.id = book_authors.author_id AND book_authors.book_id = $1
+`
+
+func (q *Queries) ListAuthorsByBookID(ctx context.Context, bookID int64) ([]Author, error) {
+	rows, err := q.db.QueryContext(ctx, listAuthorsByBookID, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Author
+	for rows.Next() {
+		var i Author
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Website,
+			&i.AgentID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBooks = `-- name: ListBooks :many
 SELECT id, title, description, cover FROM books
 ORDER BY title
@@ -270,6 +303,39 @@ ORDER BY title
 
 func (q *Queries) ListBooks(ctx context.Context) ([]Book, error) {
 	rows, err := q.db.QueryContext(ctx, listBooks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Book
+	for rows.Next() {
+		var i Book
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Cover,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listBooksByAuthorID = `-- name: ListBooksByAuthorID :many
+SELECT books.id, books.title, books.description, books.cover FROM books, book_authors
+WHERE books.id = book_authors.book_id AND book_authors.author_id = $1
+`
+
+func (q *Queries) ListBooksByAuthorID(ctx context.Context, authorID int64) ([]Book, error) {
+	rows, err := q.db.QueryContext(ctx, listBooksByAuthorID, authorID)
 	if err != nil {
 		return nil, err
 	}
