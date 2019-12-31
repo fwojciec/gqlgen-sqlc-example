@@ -230,6 +230,39 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 	return items, nil
 }
 
+const listAuthorsByAgentID = `-- name: ListAuthorsByAgentID :many
+SELECT authors.id, authors.name, authors.website, authors.agent_id FROM authors, agents
+WHERE agents.id = authors.agent_id AND authors.agent_id = $1
+`
+
+func (q *Queries) ListAuthorsByAgentID(ctx context.Context, agentID int64) ([]Author, error) {
+	rows, err := q.db.QueryContext(ctx, listAuthorsByAgentID, agentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Author
+	for rows.Next() {
+		var i Author
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Website,
+			&i.AgentID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBooks = `-- name: ListBooks :many
 SELECT id, title, description, cover FROM books
 ORDER BY title
