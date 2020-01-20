@@ -3,12 +3,14 @@ package gqlgen
 import (
 	"context"
 
-	"github.com/fwojciec/gqlgen-sqlc-example/pg"
+	"github.com/fwojciec/gqlgen-sqlc-example/dataloaders" // update the username
+	"github.com/fwojciec/gqlgen-sqlc-example/pg"          // update the username
 )
 
 // Resolver connects individual resolvers with the datalayer.
 type Resolver struct {
-	Repository pg.Repository
+	Repository  pg.Repository
+	DataLoaders dataloaders.Retriever
 }
 
 // Agent returns an implementation of the AgentResolver interface.
