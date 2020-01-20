@@ -60,7 +60,7 @@ func (r *authorResolver) Agent(ctx context.Context, obj *pg.Author) (*pg.Agent, 
 }
 
 func (r *authorResolver) Books(ctx context.Context, obj *pg.Author) ([]pg.Book, error) {
-	return r.Repository.ListBooksByAuthorID(ctx, obj.ID)
+	return r.DataLoaders.Retrieve(ctx).BooksByAuthorID.Load(obj.ID)
 }
 
 type bookResolver struct{ *Resolver }

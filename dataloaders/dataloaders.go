@@ -2,6 +2,7 @@ package dataloaders
 
 //go:generate go run github.com/vektah/dataloaden AgentLoader int64 *github.com/fwojciec/gqlgen-sqlc-example/pg.Agent
 //go:generate go run github.com/vektah/dataloaden AuthorSliceLoader int64 []github.com/fwojciec/gqlgen-sqlc-example/pg.Author
+//go:generate go run github.com/vektah/dataloaden BookSliceLoader int64 []github.com/fwojciec/gqlgen-sqlc-example/pg.Book
 
 import (
 	"context"
@@ -20,6 +21,7 @@ type Loaders struct {
 	AgentByAuthorID  *AgentLoader
 	AuthorsByAgentID *AuthorSliceLoader
 	AuthorsByBookID  *AuthorSliceLoader
+	BooksByAuthorID  *BookSliceLoader
 }
 
 func newLoaders(ctx context.Context, repo pg.Repository) *Loaders {
@@ -28,6 +30,7 @@ func newLoaders(ctx context.Context, repo pg.Repository) *Loaders {
 		AgentByAuthorID:  newAgentByAuthorID(ctx, repo),
 		AuthorsByAgentID: newAuthorsByAgentID(ctx, repo),
 		AuthorsByBookID:  newAuthorsByBookID(ctx, repo),
+		BooksByAuthorID:  newBooksByAuthorID(ctx, repo),
 	}
 }
 
@@ -127,6 +130,36 @@ func newAuthorsByBookID(ctx context.Context, repo pg.Repository) *AuthorSliceLoa
 			result := make([][]pg.Author, len(bookIDs))
 			for i, bookID := range bookIDs {
 				result[i] = groupByBookID[bookID]
+			}
+			return result, nil
+		},
+	})
+}
+
+func newBooksByAuthorID(ctx context.Context, repo pg.Repository) *BookSliceLoader {
+	return NewBookSliceLoader(BookSliceLoaderConfig{
+		MaxBatch: 100,
+		Wait:     5 * time.Millisecond,
+		Fetch: func(authorIDs []int64) ([][]pg.Book, []error) {
+			// db query
+			res, err := repo.ListBooksByAuthorIDs(ctx, authorIDs)
+			if err != nil {
+				return nil, []error{err}
+			}
+			// group
+			groupByAuthorID := make(map[int64][]pg.Book, len(authorIDs))
+			for _, r := range res {
+				groupByAuthorID[r.AuthorID] = append(groupByAuthorID[r.AuthorID], pg.Book{
+					ID:          r.ID,
+					Title:       r.Title,
+					Description: r.Description,
+					Cover:       r.Cover,
+				})
+			}
+			// order
+			result := make([][]pg.Book, len(authorIDs))
+			for i, authorID := range authorIDs {
+				result[i] = groupByAuthorID[authorID]
 			}
 			return result, nil
 		},

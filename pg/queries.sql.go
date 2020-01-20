@@ -380,25 +380,34 @@ func (q *Queries) ListBooks(ctx context.Context) ([]Book, error) {
 	return items, nil
 }
 
-const listBooksByAuthorID = `-- name: ListBooksByAuthorID :many
-SELECT books.id, books.title, books.description, books.cover FROM books, book_authors
-WHERE books.id = book_authors.book_id AND book_authors.author_id = $1
+const listBooksByAuthorIDs = `-- name: ListBooksByAuthorIDs :many
+SELECT books.id, books.title, books.description, books.cover, book_authors.author_id FROM books, book_authors
+WHERE book_authors.book_id = books.id AND book_authors.author_id = ANY($1::bigint[])
 `
 
-func (q *Queries) ListBooksByAuthorID(ctx context.Context, authorID int64) ([]Book, error) {
-	rows, err := q.db.QueryContext(ctx, listBooksByAuthorID, authorID)
+type ListBooksByAuthorIDsRow struct {
+	ID          int64
+	Title       string
+	Description string
+	Cover       string
+	AuthorID    int64
+}
+
+func (q *Queries) ListBooksByAuthorIDs(ctx context.Context, dollar_1 []int64) ([]ListBooksByAuthorIDsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listBooksByAuthorIDs, pq.Array(dollar_1))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Book
+	var items []ListBooksByAuthorIDsRow
 	for rows.Next() {
-		var i Book
+		var i ListBooksByAuthorIDsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
 			&i.Description,
 			&i.Cover,
+			&i.AuthorID,
 		); err != nil {
 			return nil, err
 		}
