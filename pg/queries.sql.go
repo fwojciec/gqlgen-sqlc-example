@@ -6,6 +6,8 @@ package pg
 import (
 	"context"
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
 const createAgent = `-- name: CreateAgent :one
@@ -184,6 +186,46 @@ func (q *Queries) ListAgents(ctx context.Context) ([]Agent, error) {
 	for rows.Next() {
 		var i Agent
 		if err := rows.Scan(&i.ID, &i.Name, &i.Email); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAgentsByAuthorIDs = `-- name: ListAgentsByAuthorIDs :many
+SELECT agents.id, agents.name, agents.email, authors.id AS author_id FROM agents, authors
+WHERE agents.id = authors.agent_id AND authors.id  = ANY($1::bigint[])
+`
+
+type ListAgentsByAuthorIDsRow struct {
+	ID       int64
+	Name     string
+	Email    string
+	AuthorID int64
+}
+
+func (q *Queries) ListAgentsByAuthorIDs(ctx context.Context, dollar_1 []int64) ([]ListAgentsByAuthorIDsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAgentsByAuthorIDs, pq.Array(dollar_1))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAgentsByAuthorIDsRow
+	for rows.Next() {
+		var i ListAgentsByAuthorIDsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.AuthorID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

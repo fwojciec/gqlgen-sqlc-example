@@ -56,11 +56,7 @@ func (r *authorResolver) Website(ctx context.Context, obj *pg.Author) (*string, 
 }
 
 func (r *authorResolver) Agent(ctx context.Context, obj *pg.Author) (*pg.Agent, error) {
-	agent, err := r.Repository.GetAgent(ctx, obj.AgentID)
-	if err != nil {
-		return nil, err
-	}
-	return &agent, nil
+	return r.DataLoaders.Retrieve(ctx).AgentByAuthorID.Load(obj.ID)
 }
 
 func (r *authorResolver) Books(ctx context.Context, obj *pg.Author) ([]pg.Book, error) {
