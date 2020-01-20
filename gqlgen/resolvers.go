@@ -66,7 +66,7 @@ func (r *authorResolver) Books(ctx context.Context, obj *pg.Author) ([]pg.Book, 
 type bookResolver struct{ *Resolver }
 
 func (r *bookResolver) Authors(ctx context.Context, obj *pg.Book) ([]pg.Author, error) {
-	return r.Repository.ListAuthorsByBookID(ctx, obj.ID)
+	return r.DataLoaders.Retrieve(ctx).AuthorsByBookID.Load(obj.ID)
 }
 
 type mutationResolver struct{ *Resolver }
