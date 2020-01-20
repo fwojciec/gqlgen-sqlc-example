@@ -24,7 +24,7 @@ type Repository interface {
 	GetAuthor(ctx context.Context, id int64) (Author, error)
 	ListAuthors(ctx context.Context) ([]Author, error)
 	UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) (Author, error)
-	ListAuthorsByAgentID(ctx context.Context, agentID int64) ([]Author, error)
+	ListAuthorsByAgentIDs(ctx context.Context, agentIDs []int64) ([]Author, error)
 	ListAuthorsByBookID(ctx context.Context, bookID int64) ([]Author, error)
 
 	// book queries

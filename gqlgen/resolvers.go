@@ -41,7 +41,7 @@ func (r *Resolver) Query() QueryResolver {
 type agentResolver struct{ *Resolver }
 
 func (r *agentResolver) Authors(ctx context.Context, obj *pg.Agent) ([]pg.Author, error) {
-	return r.Repository.ListAuthorsByAgentID(ctx, obj.ID)
+	return r.DataLoaders.Retrieve(ctx).AuthorsByAgentID.Load(obj.ID)
 }
 
 type authorResolver struct{ *Resolver }

@@ -78,9 +78,9 @@ VALUES ($1, $2);
 DELETE FROM book_authors
 WHERE book_id = $1;
 
--- name: ListAuthorsByAgentID :many
+-- name: ListAuthorsByAgentIDs :many
 SELECT authors.* FROM authors, agents
-WHERE agents.id = authors.agent_id AND authors.agent_id = $1;
+WHERE authors.agent_id = agents.id AND agents.id = ANY($1::bigint[]);
 
 -- name: ListBooksByAuthorID :many
 SELECT books.* FROM books, book_authors

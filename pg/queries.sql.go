@@ -272,13 +272,13 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 	return items, nil
 }
 
-const listAuthorsByAgentID = `-- name: ListAuthorsByAgentID :many
+const listAuthorsByAgentIDs = `-- name: ListAuthorsByAgentIDs :many
 SELECT authors.id, authors.name, authors.website, authors.agent_id FROM authors, agents
-WHERE agents.id = authors.agent_id AND authors.agent_id = $1
+WHERE authors.agent_id = agents.id AND agents.id = ANY($1::bigint[])
 `
 
-func (q *Queries) ListAuthorsByAgentID(ctx context.Context, agentID int64) ([]Author, error) {
-	rows, err := q.db.QueryContext(ctx, listAuthorsByAgentID, agentID)
+func (q *Queries) ListAuthorsByAgentIDs(ctx context.Context, dollar_1 []int64) ([]Author, error) {
+	rows, err := q.db.QueryContext(ctx, listAuthorsByAgentIDs, pq.Array(dollar_1))
 	if err != nil {
 		return nil, err
 	}
